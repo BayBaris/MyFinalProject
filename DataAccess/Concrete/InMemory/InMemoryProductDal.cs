@@ -86,7 +86,7 @@ namespace DataAccess.Concrete.InMemory
             return _products.Where(p => p.CategoryID == categoryID).ToList();
         }
 
-        public List<ProductDetailDto> GetProcudtDetails()
+        public List<ProductDetailDto> GetProductDetails()
         {
             throw new NotImplementedException();
         }
