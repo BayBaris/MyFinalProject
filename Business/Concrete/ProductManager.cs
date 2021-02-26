@@ -13,6 +13,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using Core.Utilities.Business;
 
 namespace Business.Concrete
 {
@@ -20,24 +21,28 @@ namespace Business.Concrete
     {
         //Injection
         IProductDal _productDal;
-        public ProductManager(IProductDal productDal)
+        ICategoryService _categoryService;
+        //Bir entity manager kendisi harici bir Dal operasyonunu enjekte edemez.
+        public ProductManager(IProductDal productDal,ICategoryService categoryService)
         {
             _productDal = productDal;
+            _categoryService = categoryService;
         }
 
 
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
-            if (CheckIfProductCountOfCategoryCorrect(product.CategoryID).Success)
+            IResult result = BusinessRules.Run(CheckIfProductCountOfCategoryCorrect(product.CategoryID),
+                 CheckIfProductNameDuplication(product.ProductName),CheckIfIsCategoryNumberOver());
+
+            if (result != null)
             {
-                if (CheckIfProductNameDuplication(product.ProductName).Success)
-                {
-                    _productDal.Add(product);
-                    return new SuccessResult(Messages.ProductAdded);
-                }                
+                return result;
             }
-            return new ErrorResult(Messages.ProductCountOfCategoryError);
+            _productDal.Add(product);
+            return new SuccessResult(Messages.ProductAdded);
+
         }
 
         public IDataResult<List<Product>> GetAll()
@@ -94,6 +99,15 @@ namespace Business.Concrete
             if (result)
             {
                 return new ErrorResult(Messages.ProductNameAlreadyExists);
+            }
+            return new SuccessResult();
+        }
+        private IResult CheckIfIsCategoryNumberOver()
+        {
+            var result = _categoryService.GetAll();
+            if (result.Data.Count > 15)
+            {
+                return new ErrorResult(Messages.CategoryCountError);
             }
             return new SuccessResult();
         }
