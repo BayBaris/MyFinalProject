@@ -15,6 +15,7 @@ namespace Core.Aspects.Autofac.Validation
         //Attributelerde Girelecek tip TYPE verilerek istenir...
         public ValidationAspect(Type validatorType)
         {
+            //defensive coding...
             if (!typeof(IValidator).IsAssignableFrom(validatorType))
             {
                 throw new System.Exception("Bu bir doğrulama sınıfı değil");

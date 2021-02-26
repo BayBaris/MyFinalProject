@@ -10,6 +10,7 @@ using Entities.Concrete;
 using Entities.DTOs;
 using FluentValidation;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 
@@ -24,17 +25,24 @@ namespace Business.Concrete
             _productDal = productDal;
         }
 
+
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
-        {            
-            ValidationTool.Validate(new ProductValidator(),product);            
-            _productDal.Add(product);
-            return new SuccessResult(Messages.ProductAdded);
+        {
+            if (CheckIfProductCountOfCategoryCorrect(product.CategoryID).Success)
+            {
+                if (CheckIfProductNameDuplication(product.ProductName).Success)
+                {
+                    _productDal.Add(product);
+                    return new SuccessResult(Messages.ProductAdded);
+                }                
+            }
+            return new ErrorResult(Messages.ProductCountOfCategoryError);
         }
 
         public IDataResult<List<Product>> GetAll()
         {
-            //İş Kodları...
+            
             if (DateTime.Now.Hour == 21)
             {
                 return new ErrorDataResult<List<Product>>(Messages.MaintenanceTime); // Bakım Zamanı = MaintenanceTime...
@@ -60,6 +68,34 @@ namespace Business.Concrete
         public IDataResult< List<ProductDetailDto>> GetProductDetails()
         {
             return new SuccessDataResult<List<ProductDetailDto>>( _productDal.GetProductDetails());
+        }
+
+        [ValidationAspect(typeof(ProductValidator))]
+        public IResult Update(Product product)
+        {
+            _productDal.Update(product);
+            return new SuccessResult();
+        }
+
+        // İş kuralı parçacıklarını private olarak tanımlarız.
+        private IResult CheckIfProductCountOfCategoryCorrect(int categoryID)
+        {
+            var result = _productDal.GetAll(p => p.CategoryID == categoryID).Count;
+            if (result >= 10)
+            {
+                return new ErrorResult(Messages.ProductCountOfCategoryError);
+            }
+            return new SuccessResult();
+        }
+
+        private IResult CheckIfProductNameDuplication(string productName)
+        {
+            var result = _productDal.GetAll(p => p.ProductName == productName).Any();
+            if (result)
+            {
+                return new ErrorResult(Messages.ProductNameAlreadyExists);
+            }
+            return new SuccessResult();
         }
     }
 }
