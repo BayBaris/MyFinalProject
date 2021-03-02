@@ -1,23 +1,20 @@
 ﻿using Business.Abstract;
+using Business.BusinessAspects.Autofac;
 using Business.Constants;
 using Business.ValidationRules.FluentValidation;
 using Core.Aspects.Autofac.Validation;
-using Core.CrossCuttingConcerns.Validation;
+using Core.Utilities.Business;
 using Core.Utilities.Results;
 using DataAccess.Abstract;
-using DataAccess.Concrete.InMemory;
 using Entities.Concrete;
 using Entities.DTOs;
-using FluentValidation;
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Text;
-using Core.Utilities.Business;
+using System.Linq;
 
 namespace Business.Concrete
 {
-    public class ProductManager : IProductService
+    public partial class ProductManager : IProductService
     {
         //Injection
         IProductDal _productDal;
@@ -29,7 +26,8 @@ namespace Business.Concrete
             _categoryService = categoryService;
         }
 
-
+        //Claim = Iddia etmek... (Atama) Aspect içinde verilen yetkilendirme anahtarları...
+        [SecuredOperation("")]
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
