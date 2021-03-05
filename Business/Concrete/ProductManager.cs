@@ -27,7 +27,7 @@ namespace Business.Concrete
         }
 
         //Claim = Iddia etmek... (Atama) Aspect içinde verilen yetkilendirme anahtarları...
-        [SecuredOperation("")]
+        [SecuredOperation("product.add,admin")]
         [ValidationAspect(typeof(ProductValidator))]
         public IResult Add(Product product)
         {
@@ -84,7 +84,7 @@ namespace Business.Concrete
         private IResult CheckIfProductCountOfCategoryCorrect(int categoryID)
         {
             var result = _productDal.GetAll(p => p.CategoryID == categoryID).Count;
-            if (result >= 10)
+            if (result >= 30)
             {
                 return new ErrorResult(Messages.ProductCountOfCategoryError);
             }
